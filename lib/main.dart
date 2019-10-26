@@ -105,6 +105,10 @@ class Calendar extends StatefulWidget {
   DateTime firstSelected, maximumDate, minimumDate;
   Function(DateTime day) onSelectedDay;
   Map<int, int> events;
+  Color disabledDayColor;
+  Color selectedDayColor;
+  Color normalDayColor;
+  Color outOfRangeDayColor;
 
   Calendar(
       {Map<int, String> nameDaysOfWeek,
@@ -114,7 +118,11 @@ class Calendar extends StatefulWidget {
       DateTime minimumDate,
       List<DateTime> events,
       this.disabledDays = const [],
-      this.onSelectedDay}) {
+      this.onSelectedDay,
+      this.disabledDayColor = Colors.red,
+      this.selectedDayColor = Colors.blue,
+      this.normalDayColor = Colors.black,
+      this.outOfRangeDayColor = Colors.grey}) {
     if (maximumDate != null && minimumDate != null) {
       assert(!minimumDate.isAfter(maximumDate),
           "Minimum date can't be after the Maximum date.");
@@ -215,7 +223,7 @@ class _CalendarState extends State<Calendar> {
                   child: Center(
                       child: Text(widget.nameMonthsOfYear[week.last.month] +
                           " " +
-                          week.last.year.toString()))),
+                          week.last.year.toString(), style: TextStyle(fontSize: 18),))),
               _lesserThanMaximum(week.last)
                   ? FlatButton(
                       child: Text(">"),
@@ -260,7 +268,8 @@ class _CalendarState extends State<Calendar> {
                           Text(
                             widget.nameDaysOfWeek[day.weekday].substring(0, 3),
                             style: TextStyle(
-                                fontSize: 15, color: _getDayColor(day)),
+                                fontSize: 15, color: _getDayColor(day),
+                            decoration: _isSameDay(day, DateTime.now()) ? TextDecoration.underline : null),
                           ),
                           Text(
                             day.day.toString(),
@@ -288,18 +297,18 @@ class _CalendarState extends State<Calendar> {
   }
 
   Color _getDayColor(DateTime day) {
-    if (_isSameDay(day, DateTime.now())) {
+    /*if (_isSameDay(day, DateTime.now())) {
       return Colors.green;
-    } else if ((widget.minimumDate != null &&
+    } else */if ((widget.minimumDate != null &&
             day.isBefore(widget.minimumDate)) ||
         (widget.maximumDate != null && day.isAfter(widget.maximumDate))) {
-      return Colors.grey;
+      return widget.outOfRangeDayColor;
     } else if (widget.disabledDays.contains(day.weekday)) {
-      return Colors.red;
+      return widget.disabledDayColor;
     } else if (_isSameDay(selected, day)) {
-      return Colors.blue;
+      return widget.selectedDayColor;
     } else {
-      return Colors.black;
+      return widget.normalDayColor;
     }
   }
 
