@@ -17,6 +17,9 @@ class _MyAppState extends State<MyApp> {
         title: 'Calendar',
         home: SafeArea(
             child: Scaffold(
+          appBar: AppBar(
+            title: Text("Flutter Calendar"),
+          ),
           body: Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
@@ -48,7 +51,11 @@ class _MyAppState extends State<MyApp> {
                   disabledDays: [DateTime.saturday, DateTime.sunday],
                   minimumDate: DateTime.parse("2019-10-13"),
                   maximumDate: DateTime.parse("2019-11-22"),
-                  events: [DateTime.parse("2019-10-26"), DateTime.parse("2019-10-26"), DateTime.parse("2019-10-25")],
+                  events: [
+                    DateTime.parse("2019-10-26"),
+                    DateTime.parse("2019-10-26"),
+                    DateTime.parse("2019-10-25")
+                  ],
                   onSelectedDay: (day) {
                     setState(() {
                       text = day.toIso8601String();
@@ -119,8 +126,7 @@ class Calendar extends StatefulWidget {
     this.firstSelected = _zeroHour(tempDate);
 
     if (maximumDate != null) {
-      this.maximumDate = DateTime(
-          maximumDate.year, maximumDate.month, maximumDate.day, 0, 0, 0, 0, 0);
+      this.maximumDate = _zeroHour(maximumDate);
       if (this.firstSelected.isAfter(maximumDate)) {
         var willBeFirstSelected = maximumDate;
         while (disabledDays.contains(willBeFirstSelected.weekday)) {
@@ -131,8 +137,7 @@ class Calendar extends StatefulWidget {
     }
 
     if (minimumDate != null) {
-      this.minimumDate = DateTime(
-          minimumDate.year, minimumDate.month, minimumDate.day, 0, 0, 0, 0, 0);
+      this.minimumDate = _zeroHour(minimumDate);
       if (this.firstSelected.isBefore(minimumDate)) {
         var willBeFirstSelected = minimumDate;
         while (disabledDays.contains(willBeFirstSelected.weekday)) {
@@ -165,7 +170,8 @@ class Calendar extends StatefulWidget {
     this.events = Map();
     events?.forEach((date) {
       final zeroHour = _zeroHour(date);
-      this.events[zeroHour.millisecondsSinceEpoch] = (this.events[zeroHour.millisecondsSinceEpoch] ?? 0) + 1;
+      this.events[zeroHour.millisecondsSinceEpoch] =
+          (this.events[zeroHour.millisecondsSinceEpoch] ?? 0) + 1;
     });
   }
 
@@ -242,7 +248,9 @@ class _CalendarState extends State<Calendar> {
                   alignment: Alignment.topRight,
                   children: <Widget>[
                     Text(
-                        (widget.events[_zeroHour(day).millisecondsSinceEpoch] ?? "").toString(),
+                      (widget.events[_zeroHour(day).millisecondsSinceEpoch] ??
+                              "")
+                          .toString(),
                       style: TextStyle(color: _getDayColor(day), fontSize: 10),
                     ),
                     Padding(
@@ -277,12 +285,6 @@ class _CalendarState extends State<Calendar> {
     return List.generate(7, (i) {
       return dayOfTheWeek.add(Duration(days: i - day));
     });
-  }
-
-  bool _isSameDay(DateTime time1, DateTime time2) {
-    return time1.year == time2.year &&
-        time1.month == time2.month &&
-        time1.day == time2.day;
   }
 
   Color _getDayColor(DateTime day) {
@@ -330,6 +332,12 @@ class _CalendarState extends State<Calendar> {
         (widget.maximumDate != null && day.isAfter(widget.maximumDate)) ||
         widget.disabledDays.contains(day.weekday));
   }
+}
+
+bool _isSameDay(DateTime time1, DateTime time2) {
+  return time1.year == time2.year &&
+      time1.month == time2.month &&
+      time1.day == time2.day;
 }
 
 DateTime _zeroHour(DateTime date) {
