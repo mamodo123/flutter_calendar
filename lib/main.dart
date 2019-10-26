@@ -24,46 +24,43 @@ class _MyAppState extends State<MyApp> {
             padding: const EdgeInsets.all(10),
             child: Column(
               children: <Widget>[
-                Container(
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(width: 1, color: Colors.black)),
-                  child: Calendar(
-                    nameDaysOfWeek: {
-                      DateTime.monday: "Segunda",
-                      DateTime.tuesday: "Terça",
-                      DateTime.wednesday: "Quarta",
-                      DateTime.thursday: "Quinta",
-                      DateTime.friday: "Sexta",
-                      DateTime.saturday: "Sábado",
-                      DateTime.sunday: "Domingo"
-                    },
-                    nameMonthsOfYear: {
-                      DateTime.january: "Janeiro",
-                      DateTime.february: "Fevereiro",
-                      DateTime.march: "Março",
-                      DateTime.april: "Abril",
-                      DateTime.may: "Maio",
-                      DateTime.june: "Junho",
-                      DateTime.july: "Julho",
-                      DateTime.august: "Agosto",
-                      DateTime.september: "Setembro",
-                      DateTime.october: "Outubro",
-                      DateTime.november: "Novembro",
-                      DateTime.december: "Dezembro",
-                    },
-                    disabledDays: [DateTime.saturday, DateTime.sunday],
-                    minimumDate: DateTime.parse("2019-10-13"),
-                    maximumDate: DateTime.parse("2019-11-22"),
-                    events: [
-                      DateTime.parse("2019-10-26"),
-                      DateTime.parse("2019-10-26"),
-                      DateTime.parse("2019-10-25")
-                    ],
-                    onSelectedDay: (day) {
-                      setState(() {
-                        text = day.toIso8601String();
-                      });
-                    },
-                  ),
+                Calendar(
+                  nameDaysOfWeek: {
+                    DateTime.monday: "Segunda",
+                    DateTime.tuesday: "Terça",
+                    DateTime.wednesday: "Quarta",
+                    DateTime.thursday: "Quinta",
+                    DateTime.friday: "Sexta",
+                    DateTime.saturday: "Sábado",
+                    DateTime.sunday: "Domingo"
+                  },
+                  nameMonthsOfYear: {
+                    DateTime.january: "Janeiro",
+                    DateTime.february: "Fevereiro",
+                    DateTime.march: "Março",
+                    DateTime.april: "Abril",
+                    DateTime.may: "Maio",
+                    DateTime.june: "Junho",
+                    DateTime.july: "Julho",
+                    DateTime.august: "Agosto",
+                    DateTime.september: "Setembro",
+                    DateTime.october: "Outubro",
+                    DateTime.november: "Novembro",
+                    DateTime.december: "Dezembro",
+                  },
+                  disabledDays: [DateTime.saturday, DateTime.sunday],
+                  minimumDate: DateTime.parse("2019-10-13"),
+                  maximumDate: DateTime.parse("2019-11-22"),
+                  events: [
+                    DateTime.parse("2019-10-26"),
+                    DateTime.parse("2019-10-26"),
+                    DateTime.parse("2019-10-25")
+                  ],
+                  onSelectedDay: (day) {
+                    setState(() {
+                      text = day.toIso8601String();
+                    });
+                  },
                 ),
                 Expanded(
                   child: Center(
@@ -112,6 +109,7 @@ class Calendar extends StatefulWidget {
   Color selectedDayColor;
   Color normalDayColor;
   Color outOfRangeDayColor;
+  bool showBorder;
   bool showDivider;
 
   //in implementation
@@ -130,6 +128,7 @@ class Calendar extends StatefulWidget {
       this.selectedDayColor = Colors.blue,
       this.normalDayColor = Colors.black,
       this.outOfRangeDayColor = Colors.grey,
+        this.showBorder = true,
       this.showDivider = true,
       /*this.showMonth = true*/}) {
     if (maximumDate != null && minimumDate != null) {
@@ -209,92 +208,95 @@ class _CalendarState extends State<Calendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: <Widget>[
-          widget.showMonth? Row(
-            children: <Widget>[
-              _greaterThanMinimum(week.first)
-                  ? FlatButton(
-                      child: Text("<"),
-                      onPressed: () {
-                        showing = showing.add(Duration(days: -7));
-                        setState(() {
-                          week = generateWeek(showing);
-                        });
-                      },
-                    )
-                  : FlatButton(
-                      onPressed: null,
-                      child: Container(),
-                    ),
-              Expanded(
-                  child: Center(
-                      child: Text(widget.nameMonthsOfYear[week.last.month] +
-                          " " +
-                          week.last.year.toString(), style: TextStyle(fontSize: 18),))),
-              _lesserThanMaximum(week.last)
-                  ? FlatButton(
-                      child: Text(">"),
-                      onPressed: () {
-                        showing = showing.add(Duration(days: 7));
-                        setState(() {
-                          week = generateWeek(showing);
-                        });
-                      },
-                    )
-                  : FlatButton(
-                      onPressed: null,
-                      child: Container(),
-                    ),
-            ],
-          ) : Container(),
-          !widget.showMonth || !widget.showDivider ? Container() : Divider(thickness: 1, color: Colors.black, height: 3,),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: week.map((day) {
-              return GestureDetector(
-                onTap: () {
-                  if (_isOkDay(day)) {
-                    setState(() {
-                      this.selected = day;
-                    });
-                    widget.onSelectedDay(day);
-                  }
-                },
-                child: Stack(
-                  alignment: Alignment.topRight,
-                  children: <Widget>[
-                    Text(
-                      (widget.events[_zeroHour(day).millisecondsSinceEpoch] ??
-                              "")
-                          .toString(),
-                      style: TextStyle(color: _getDayColor(day), fontSize: 10),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: Column(
-                        children: <Widget>[
-                          Text(
-                            widget.nameDaysOfWeek[day.weekday].substring(0, 3),
-                            style: TextStyle(
-                                fontSize: 15, color: _getDayColor(day),
-                            decoration: _isSameDay(day, DateTime.now()) ? TextDecoration.underline : null),
-                          ),
-                          Text(
-                            day.day.toString(),
-                            style: TextStyle(
-                                fontSize: 12, color: _getDayColor(day)),
-                          ),
-                        ],
+    return Container(
+      decoration: widget.showBorder ? BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(width: 1, color: Colors.black)) : null,
+      child: Center(
+        child: Column(
+          children: <Widget>[
+            widget.showMonth? Row(
+              children: <Widget>[
+                _greaterThanMinimum(week.first)
+                    ? FlatButton(
+                        child: Text("<"),
+                        onPressed: () {
+                          showing = showing.add(Duration(days: -7));
+                          setState(() {
+                            week = generateWeek(showing);
+                          });
+                        },
+                      )
+                    : FlatButton(
+                        onPressed: null,
+                        child: Container(),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
+                Expanded(
+                    child: Center(
+                        child: Text(widget.nameMonthsOfYear[week.last.month] +
+                            " " +
+                            week.last.year.toString(), style: TextStyle(fontSize: 18),))),
+                _lesserThanMaximum(week.last)
+                    ? FlatButton(
+                        child: Text(">"),
+                        onPressed: () {
+                          showing = showing.add(Duration(days: 7));
+                          setState(() {
+                            week = generateWeek(showing);
+                          });
+                        },
+                      )
+                    : FlatButton(
+                        onPressed: null,
+                        child: Container(),
+                      ),
+              ],
+            ) : Container(),
+            !widget.showMonth || !widget.showDivider ? Container() : Divider(thickness: 1, color: Colors.black, height: 3,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: week.map((day) {
+                return GestureDetector(
+                  onTap: () {
+                    if (_isOkDay(day)) {
+                      setState(() {
+                        this.selected = day;
+                      });
+                      widget.onSelectedDay(day);
+                    }
+                  },
+                  child: Stack(
+                    alignment: Alignment.topRight,
+                    children: <Widget>[
+                      Text(
+                        (widget.events[_zeroHour(day).millisecondsSinceEpoch] ??
+                                "")
+                            .toString(),
+                        style: TextStyle(color: _getDayColor(day), fontSize: 10),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              widget.nameDaysOfWeek[day.weekday].substring(0, 3),
+                              style: TextStyle(
+                                  fontSize: 15, color: _getDayColor(day),
+                              decoration: _isSameDay(day, DateTime.now()) ? TextDecoration.underline : null),
+                            ),
+                            Text(
+                              day.day.toString(),
+                              style: TextStyle(
+                                  fontSize: 12, color: _getDayColor(day)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
       ),
     );
   }
