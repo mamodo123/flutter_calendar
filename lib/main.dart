@@ -2,43 +2,66 @@ import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   // This widget is the root of your application.
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  var text = "waiting";
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         title: 'Calendar',
         home: SafeArea(
-            child: Calendar(
-          nameDaysOfWeek: {
-            DateTime.monday: "Segunda",
-            DateTime.tuesday: "Terça",
-            DateTime.wednesday: "Quarta",
-            DateTime.thursday: "Quinta",
-            DateTime.friday: "Sexta",
-            DateTime.saturday: "Sábado",
-            DateTime.sunday: "Domingo"
-          },
-          nameMonthsOfYear: {
-            DateTime.january: "Janeiro",
-            DateTime.february: "Fevereiro",
-            DateTime.march: "Março",
-            DateTime.april: "Abril",
-            DateTime.may: "Maio",
-            DateTime.june: "Junho",
-            DateTime.july: "Julho",
-            DateTime.august: "Agosto",
-            DateTime.september: "Setembro",
-            DateTime.october: "Outubro",
-            DateTime.november: "Novembro",
-            DateTime.december: "Dezembro",
-          },
-          disabledDays: [DateTime.saturday, DateTime.sunday],
-          minimumDate: DateTime.parse("2019-10-13"),
-          maximumDate: DateTime.parse("2019-11-22"),
-          onSelectedDay: (day) {
-            print(day.toIso8601String());
-          },
+            child: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: <Widget>[
+                Calendar(
+                  nameDaysOfWeek: {
+                    DateTime.monday: "Segunda",
+                    DateTime.tuesday: "Terça",
+                    DateTime.wednesday: "Quarta",
+                    DateTime.thursday: "Quinta",
+                    DateTime.friday: "Sexta",
+                    DateTime.saturday: "Sábado",
+                    DateTime.sunday: "Domingo"
+                  },
+                  nameMonthsOfYear: {
+                    DateTime.january: "Janeiro",
+                    DateTime.february: "Fevereiro",
+                    DateTime.march: "Março",
+                    DateTime.april: "Abril",
+                    DateTime.may: "Maio",
+                    DateTime.june: "Junho",
+                    DateTime.july: "Julho",
+                    DateTime.august: "Agosto",
+                    DateTime.september: "Setembro",
+                    DateTime.october: "Outubro",
+                    DateTime.november: "Novembro",
+                    DateTime.december: "Dezembro",
+                  },
+                  disabledDays: [DateTime.saturday, DateTime.sunday],
+                  minimumDate: DateTime.parse("2019-10-13"),
+                  maximumDate: DateTime.parse("2019-11-22"),
+                  onSelectedDay: (day) {
+                    setState(() {
+                      text = day.toIso8601String();
+                    });
+                  },
+                ),
+                Expanded(
+                  child: Center(
+                    child: Text(text),
+                  ),
+                )
+              ],
+            ),
+          ),
         )));
   }
 }
@@ -155,81 +178,74 @@ class _CalendarState extends State<Calendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Center(
-          child: Column(
+    return Center(
+      child: Column(
+        children: <Widget>[
+          Row(
             children: <Widget>[
-              Row(
-                children: <Widget>[
-                  _greaterThanMinimum(week.first)
-                      ? FlatButton(
-                          child: Text("<"),
-                          onPressed: () {
-                            showing = showing.add(Duration(days: -7));
-                            setState(() {
-                              week = generateWeek(showing);
-                            });
-                          },
-                        )
-                      : FlatButton(
-                          onPressed: null,
-                          child: Container(),
-                        ),
-                  Expanded(
-                      child: Center(
-                          child: Text(widget.nameMonthsOfYear[week.last.month] +
-                              " " +
-                              week.last.year.toString()))),
-                  _lesserThanMaximum(week.last)
-                      ? FlatButton(
-                          child: Text(">"),
-                          onPressed: () {
-                            showing = showing.add(Duration(days: 7));
-                            setState(() {
-                              week = generateWeek(showing);
-                            });
-                          },
-                        )
-                      : FlatButton(
-                          onPressed: null,
-                          child: Container(),
-                        ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: week.map((day) {
-                  return GestureDetector(
-                    onTap: () {
-                      if (_isOkDay(day)) {
+              _greaterThanMinimum(week.first)
+                  ? FlatButton(
+                      child: Text("<"),
+                      onPressed: () {
+                        showing = showing.add(Duration(days: -7));
                         setState(() {
-                          this.selected = day;
+                          week = generateWeek(showing);
                         });
-                        widget.onSelectedDay(day);
-                      }
-                    },
-                    child: Column(
-                      children: <Widget>[
-                        Text(
-                          widget.nameDaysOfWeek[day.weekday].substring(0, 3),
-                          style:
-                              TextStyle(fontSize: 15, color: _getDayColor(day)),
-                        ),
-                        Text(
-                          day.day.toString(),
-                          style:
-                              TextStyle(fontSize: 12, color: _getDayColor(day)),
-                        ),
-                      ],
+                      },
+                    )
+                  : FlatButton(
+                      onPressed: null,
+                      child: Container(),
                     ),
-                  );
-                }).toList(),
-              ),
+              Expanded(
+                  child: Center(
+                      child: Text(widget.nameMonthsOfYear[week.last.month] +
+                          " " +
+                          week.last.year.toString()))),
+              _lesserThanMaximum(week.last)
+                  ? FlatButton(
+                      child: Text(">"),
+                      onPressed: () {
+                        showing = showing.add(Duration(days: 7));
+                        setState(() {
+                          week = generateWeek(showing);
+                        });
+                      },
+                    )
+                  : FlatButton(
+                      onPressed: null,
+                      child: Container(),
+                    ),
             ],
           ),
-        ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: week.map((day) {
+              return GestureDetector(
+                onTap: () {
+                  if (_isOkDay(day)) {
+                    setState(() {
+                      this.selected = day;
+                    });
+                    widget.onSelectedDay(day);
+                  }
+                },
+                child: Column(
+                  children: <Widget>[
+                    Text(
+                      widget.nameDaysOfWeek[day.weekday].substring(0, 3),
+                      style: TextStyle(fontSize: 15, color: _getDayColor(day)),
+                    ),
+                    Text(
+                      day.day.toString(),
+                      style: TextStyle(fontSize: 12, color: _getDayColor(day)),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -248,9 +264,7 @@ class _CalendarState extends State<Calendar> {
   }
 
   Color _getDayColor(DateTime day) {
-    if (_isSameDay(selected, day)) {
-      return Colors.blue;
-    } else if (_isSameDay(day, DateTime.now())) {
+    if (_isSameDay(day, DateTime.now())) {
       return Colors.green;
     } else if ((widget.minimumDate != null &&
             day.isBefore(widget.minimumDate)) ||
@@ -258,6 +272,8 @@ class _CalendarState extends State<Calendar> {
       return Colors.grey;
     } else if (widget.disabledDays.contains(day.weekday)) {
       return Colors.red;
+    } else if (_isSameDay(selected, day)) {
+      return Colors.blue;
     } else {
       return Colors.black;
     }
