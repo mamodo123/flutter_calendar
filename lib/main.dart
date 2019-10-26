@@ -48,6 +48,7 @@ class _MyAppState extends State<MyApp> {
                   disabledDays: [DateTime.saturday, DateTime.sunday],
                   minimumDate: DateTime.parse("2019-10-13"),
                   maximumDate: DateTime.parse("2019-11-22"),
+                  events: [DateTime.parse("2019-10-26"), DateTime.parse("2019-10-26"), DateTime.parse("2019-10-25")],
                   onSelectedDay: (day) {
                     setState(() {
                       text = day.toIso8601String();
@@ -96,6 +97,7 @@ class Calendar extends StatefulWidget {
   List<int> disabledDays;
   DateTime firstSelected, maximumDate, minimumDate;
   Function(DateTime day) onSelectedDay;
+  Map<int, int> events;
 
   Calendar(
       {Map<int, String> nameDaysOfWeek,
@@ -103,6 +105,7 @@ class Calendar extends StatefulWidget {
       DateTime firstSelected,
       DateTime maximumDate,
       DateTime minimumDate,
+      List<DateTime> events,
       this.disabledDays = const [],
       this.onSelectedDay}) {
     if (maximumDate != null && minimumDate != null) {
@@ -113,8 +116,7 @@ class Calendar extends StatefulWidget {
         "Disabled days has to be lesser than 7, or you can't select a day.");
 
     final tempDate = firstSelected != null ? firstSelected : DateTime.now();
-    this.firstSelected =
-        DateTime(tempDate.year, tempDate.month, tempDate.day, 0, 0, 0, 0, 0);
+    this.firstSelected = _zeroHour(tempDate);
 
     if (maximumDate != null) {
       this.maximumDate = DateTime(
@@ -159,6 +161,12 @@ class Calendar extends StatefulWidget {
     } else {
       this.nameMonthsOfYear = MONTHS_OF_YEAR;
     }
+
+    this.events = Map();
+    events?.forEach((date) {
+      final zeroHour = _zeroHour(date);
+      this.events[zeroHour.millisecondsSinceEpoch] = (this.events[zeroHour.millisecondsSinceEpoch] ?? 0) + 1;
+    });
   }
 
   @override
@@ -230,15 +238,29 @@ class _CalendarState extends State<Calendar> {
                     widget.onSelectedDay(day);
                   }
                 },
-                child: Column(
+                child: Stack(
+                  alignment: Alignment.topRight,
                   children: <Widget>[
                     Text(
-                      widget.nameDaysOfWeek[day.weekday].substring(0, 3),
-                      style: TextStyle(fontSize: 15, color: _getDayColor(day)),
+                        (widget.events[_zeroHour(day).millisecondsSinceEpoch] ?? "").toString(),
+                      style: TextStyle(color: _getDayColor(day), fontSize: 10),
                     ),
-                    Text(
-                      day.day.toString(),
-                      style: TextStyle(fontSize: 12, color: _getDayColor(day)),
+                    Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: Column(
+                        children: <Widget>[
+                          Text(
+                            widget.nameDaysOfWeek[day.weekday].substring(0, 3),
+                            style: TextStyle(
+                                fontSize: 15, color: _getDayColor(day)),
+                          ),
+                          Text(
+                            day.day.toString(),
+                            style: TextStyle(
+                                fontSize: 12, color: _getDayColor(day)),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -308,4 +330,8 @@ class _CalendarState extends State<Calendar> {
         (widget.maximumDate != null && day.isAfter(widget.maximumDate)) ||
         widget.disabledDays.contains(day.weekday));
   }
+}
+
+DateTime _zeroHour(DateTime date) {
+  return DateTime(date.year, date.month, date.day, 0, 0, 0, 0, 0);
 }
