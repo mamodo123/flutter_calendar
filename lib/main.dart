@@ -58,9 +58,10 @@ class _MyAppState extends State<MyApp> {
                     DateTime.now().add(Duration(days: 3)),
                   ],
                   holidays: [
-                    DateTime.parse("2019-10-03"),
-                    DateTime.parse("2019-10-02"),
-                    DateTime.parse("2019-10-09")
+                    DateTime.now().add(Duration(days: 1)),
+                    DateTime.now().add(Duration(days: 6)),
+                    DateTime.now().add(Duration(days: 8)),
+                    DateTime.now().add(Duration(days: 11))
                   ],
                   onSelectedDay: (day) {
                     setState(() {
@@ -121,6 +122,7 @@ class Calendar extends StatefulWidget {
 
   //in implementation
   bool showMonth = true;
+  //
 
   Calendar({
     Map<int, String> nameDaysOfWeek,
