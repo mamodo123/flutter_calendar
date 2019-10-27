@@ -49,12 +49,18 @@ class _MyAppState extends State<MyApp> {
                     DateTime.december: "Dezembro",
                   },
                   disabledDays: [DateTime.saturday, DateTime.sunday],
-                  minimumDate: DateTime.parse("2019-09-13"),
-                  maximumDate: DateTime.parse("2019-09-28"),
+                  minimumDate: DateTime.now(),
+                  maximumDate: DateTime.now().add(Duration(days: 14)),
                   events: [
-                    DateTime.parse("2019-10-26"),
-                    DateTime.parse("2019-10-26"),
-                    DateTime.parse("2019-10-25")
+                    DateTime.now().add(Duration(days: 1)),
+                    DateTime.now().add(Duration(days: 1)),
+                    DateTime.now().add(Duration(days: 2)),
+                    DateTime.now().add(Duration(days: 3)),
+                  ],
+                  holidays: [
+                    DateTime.parse("2019-10-03"),
+                    DateTime.parse("2019-10-02"),
+                    DateTime.parse("2019-10-09")
                   ],
                   onSelectedDay: (day) {
                     setState(() {
@@ -105,6 +111,7 @@ class Calendar extends StatefulWidget {
   DateTime firstSelected, maximumDate, minimumDate;
   Function(DateTime day) onSelectedDay;
   Map<int, int> events;
+  List<int> holidays;
   Color disabledDayColor;
   Color selectedDayColor;
   Color normalDayColor;
@@ -122,6 +129,7 @@ class Calendar extends StatefulWidget {
     this.maximumDate,
     this.minimumDate,
     List<DateTime> events,
+    List<DateTime> holidays = const [],
     this.disabledDays = const [],
     this.onSelectedDay,
     this.disabledDayColor = Colors.red,
@@ -154,6 +162,7 @@ class Calendar extends StatefulWidget {
     _getDaysOfWeekName(nameDaysOfWeek);
     _getMonthsName(nameMonthsOfYear);
     _getEvents(events);
+    _getHolidays(holidays);
   }
 
   @override
@@ -164,6 +173,7 @@ class Calendar extends StatefulWidget {
         maximumDate: maximumDate,
         minimumDate: minimumDate,
         events: events,
+        holidays: holidays,
         disabledDays: disabledDays,
         onSelectedDay: onSelectedDay,
         disabledDayColor: disabledDayColor,
@@ -206,6 +216,13 @@ class Calendar extends StatefulWidget {
           (this.events[zeroHour.millisecondsSinceEpoch] ?? 0) + 1;
     });
   }
+
+  _getHolidays(List<DateTime> holidays) {
+    this.holidays = List();
+    holidays.forEach((date) {
+      this.holidays.add(_zeroHour(date).millisecondsSinceEpoch);
+    });
+  }
 }
 
 class _CalendarState extends State<Calendar> {
@@ -214,6 +231,7 @@ class _CalendarState extends State<Calendar> {
   DateTime firstSelected, maximumDate, minimumDate;
   Function(DateTime day) onSelectedDay;
   Map<int, int> events;
+  List<int> holidays;
   Color disabledDayColor;
   Color selectedDayColor;
   Color normalDayColor;
@@ -235,6 +253,7 @@ class _CalendarState extends State<Calendar> {
     this.maximumDate,
     this.minimumDate,
     this.events,
+    this.holidays,
     this.disabledDays,
     this.onSelectedDay,
     this.disabledDayColor,
@@ -247,9 +266,12 @@ class _CalendarState extends State<Calendar> {
   }) {
     this.selected = firstSelected;
 
-    DateTime focus = firstSelected ?? minimumDate ?? maximumDate ?? _zeroHour(DateTime.now());
+    DateTime focus = firstSelected ??
+        minimumDate ??
+        maximumDate ??
+        _zeroHour(DateTime.now());
 
-    this.week = generateWeek(focus);
+    this.week = _generateWeek(focus);
     this.showing = focus;
   }
 
@@ -273,7 +295,7 @@ class _CalendarState extends State<Calendar> {
                               onPressed: () {
                                 showing = showing.add(Duration(days: -7));
                                 setState(() {
-                                  week = generateWeek(showing);
+                                  week = _generateWeek(showing);
                                 });
                               },
                             )
@@ -295,7 +317,7 @@ class _CalendarState extends State<Calendar> {
                               onPressed: () {
                                 showing = showing.add(Duration(days: 7));
                                 setState(() {
-                                  week = generateWeek(showing);
+                                  week = _generateWeek(showing);
                                 });
                               },
                             )
@@ -366,7 +388,7 @@ class _CalendarState extends State<Calendar> {
     );
   }
 
-  List<DateTime> generateWeek(DateTime dayOfTheWeek) {
+  List<DateTime> _generateWeek(DateTime dayOfTheWeek) {
     final day = dayOfTheWeek.weekday - 1;
     return List.generate(7, (i) {
       return dayOfTheWeek.add(Duration(days: i - day));
@@ -380,7 +402,8 @@ class _CalendarState extends State<Calendar> {
     if ((minimumDate != null && day.isBefore(minimumDate)) ||
         (maximumDate != null && day.isAfter(maximumDate))) {
       return outOfRangeDayColor;
-    } else if (disabledDays.contains(day.weekday)) {
+    } else if (disabledDays.contains(day.weekday) ||
+        holidays.contains(_zeroHour(day).millisecondsSinceEpoch)) {
       return disabledDayColor;
     } else if (selected != null && _isSameDay(selected, day)) {
       return selectedDayColor;
@@ -416,7 +439,8 @@ class _CalendarState extends State<Calendar> {
   bool _isOkDay(DateTime day) {
     return !((minimumDate != null && day.isBefore(minimumDate)) ||
         (maximumDate != null && day.isAfter(maximumDate)) ||
-        disabledDays.contains(day.weekday));
+        disabledDays.contains(day.weekday) ||
+        holidays.contains(_zeroHour(day).millisecondsSinceEpoch));
   }
 }
 
