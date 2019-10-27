@@ -122,14 +122,15 @@ class Calendar extends StatefulWidget {
 
   //in implementation
   bool showMonth = true;
+
   //
 
   Calendar({
     Map<int, String> nameDaysOfWeek,
     Map<int, String> nameMonthsOfYear,
-    this.firstSelected,
-    this.maximumDate,
-    this.minimumDate,
+    DateTime firstSelected,
+    DateTime maximumDate,
+    DateTime minimumDate,
     List<DateTime> events,
     List<DateTime> holidays = const [],
     this.disabledDays = const [],
@@ -159,6 +160,16 @@ class Calendar extends StatefulWidget {
 
       assert(!disabledDays.contains(firstSelected.weekday),
           "First selected date can't be a disabled day");
+    }
+
+    if (firstSelected != null) {
+      this.firstSelected = _zeroHour(firstSelected);
+    }
+    if (minimumDate != null) {
+      this.minimumDate = _zeroHour(minimumDate);
+    }
+    if (maximumDate != null) {
+      this.maximumDate = _zeroHour(maximumDate);
     }
 
     _getDaysOfWeekName(nameDaysOfWeek);
