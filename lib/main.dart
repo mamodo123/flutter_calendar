@@ -49,8 +49,8 @@ class _MyAppState extends State<MyApp> {
                     DateTime.december: "Dezembro",
                   },
                   disabledDays: [DateTime.saturday, DateTime.sunday],
-                  minimumDate: DateTime.parse("2019-10-13"),
-                  maximumDate: DateTime.parse("2019-11-22"),
+                  minimumDate: DateTime.parse("2019-09-13"),
+                  maximumDate: DateTime.parse("2019-09-28"),
                   events: [
                     DateTime.parse("2019-10-26"),
                     DateTime.parse("2019-10-26"),
@@ -115,54 +115,66 @@ class Calendar extends StatefulWidget {
   //in implementation
   bool showMonth = true;
 
-  Calendar(
-      {Map<int, String> nameDaysOfWeek,
-      Map<int, String> nameMonthsOfYear,
-      DateTime firstSelected,
-      DateTime maximumDate,
-      DateTime minimumDate,
-      List<DateTime> events,
-      this.disabledDays = const [],
-      this.onSelectedDay,
-      this.disabledDayColor = Colors.red,
-      this.selectedDayColor = Colors.blue,
-      this.normalDayColor = Colors.black,
-      this.outOfRangeDayColor = Colors.grey,
-        this.showBorder = true,
-      this.showDivider = true,
-      /*this.showMonth = true*/}) {
+  Calendar({
+    Map<int, String> nameDaysOfWeek,
+    Map<int, String> nameMonthsOfYear,
+    this.firstSelected,
+    this.maximumDate,
+    this.minimumDate,
+    List<DateTime> events,
+    this.disabledDays = const [],
+    this.onSelectedDay,
+    this.disabledDayColor = Colors.red,
+    this.selectedDayColor = Colors.blue,
+    this.normalDayColor = Colors.black,
+    this.outOfRangeDayColor = Colors.grey,
+    this.showBorder = true,
+    this.showDivider = true,
+    /*this.showMonth = true*/
+  }) {
     if (maximumDate != null && minimumDate != null) {
       assert(!minimumDate.isAfter(maximumDate),
           "Minimum date can't be after the Maximum date.");
     }
-    assert(disabledDays.length < 7,
-        "Disabled days has to be lesser than 7, or you can't select a day.");
 
-    final tempDate = firstSelected != null ? firstSelected : DateTime.now();
-    this.firstSelected = _zeroHour(tempDate);
-
-    if (maximumDate != null) {
-      this.maximumDate = _zeroHour(maximumDate);
-      if (this.firstSelected.isAfter(maximumDate)) {
-        var willBeFirstSelected = maximumDate;
-        while (disabledDays.contains(willBeFirstSelected.weekday)) {
-          willBeFirstSelected = willBeFirstSelected.add(Duration(days: -1));
-        }
-        this.firstSelected = willBeFirstSelected;
+    if (firstSelected != null) {
+      if (maximumDate != null) {
+        assert(!firstSelected.isAfter(maximumDate),
+            "First selected date can't be after the maximum date");
       }
+      if (minimumDate != null) {
+        assert(!minimumDate.isBefore(minimumDate),
+            "First selected date can't be before the minimum date");
+      }
+
+      assert(!disabledDays.contains(firstSelected.weekday),
+          "First selected date can't be a disabled day");
     }
 
-    if (minimumDate != null) {
-      this.minimumDate = _zeroHour(minimumDate);
-      if (this.firstSelected.isBefore(minimumDate)) {
-        var willBeFirstSelected = minimumDate;
-        while (disabledDays.contains(willBeFirstSelected.weekday)) {
-          willBeFirstSelected = willBeFirstSelected.add(Duration(days: 1));
-        }
-        this.firstSelected = willBeFirstSelected;
-      }
-    }
+    _getDaysOfWeekName(nameDaysOfWeek);
+    _getMonthsName(nameMonthsOfYear);
+    _getEvents(events);
+  }
 
+  @override
+  _CalendarState createState() => _CalendarState(
+        nameDaysOfWeek: nameDaysOfWeek,
+        nameMonthsOfYear: nameMonthsOfYear,
+        firstSelected: firstSelected,
+        maximumDate: maximumDate,
+        minimumDate: minimumDate,
+        events: events,
+        disabledDays: disabledDays,
+        onSelectedDay: onSelectedDay,
+        disabledDayColor: disabledDayColor,
+        selectedDayColor: selectedDayColor,
+        normalDayColor: normalDayColor,
+        outOfRangeDayColor: outOfRangeDayColor,
+        showBorder: showBorder,
+        showDivider: showDivider,
+      );
+
+  _getDaysOfWeekName(Map<int, String> nameDaysOfWeek) {
     if (nameDaysOfWeek != null) {
       var nameDaysOfWeekTemp = Map<int, String>.from(DAYS_OF_WEEK);
       nameDaysOfWeek.keys.forEach((i) {
@@ -172,7 +184,9 @@ class Calendar extends StatefulWidget {
     } else {
       this.nameDaysOfWeek = DAYS_OF_WEEK;
     }
+  }
 
+  _getMonthsName(Map<int, String> nameMonthsOfYear) {
     if (nameMonthsOfYear != null) {
       var nameMonthsOfYearTemp = Map<int, String>.from(MONTHS_OF_YEAR);
       nameMonthsOfYear.keys.forEach((i) {
@@ -182,7 +196,9 @@ class Calendar extends StatefulWidget {
     } else {
       this.nameMonthsOfYear = MONTHS_OF_YEAR;
     }
+  }
 
+  _getEvents(List<DateTime> events) {
     this.events = Map();
     events?.forEach((date) {
       final zeroHour = _zeroHour(date);
@@ -190,67 +206,113 @@ class Calendar extends StatefulWidget {
           (this.events[zeroHour.millisecondsSinceEpoch] ?? 0) + 1;
     });
   }
-
-  @override
-  _CalendarState createState() => _CalendarState(firstSelected);
 }
 
 class _CalendarState extends State<Calendar> {
+  Map<int, String> nameDaysOfWeek, nameMonthsOfYear;
+  List<int> disabledDays;
+  DateTime firstSelected, maximumDate, minimumDate;
+  Function(DateTime day) onSelectedDay;
+  Map<int, int> events;
+  Color disabledDayColor;
+  Color selectedDayColor;
+  Color normalDayColor;
+  Color outOfRangeDayColor;
+  bool showBorder;
+  bool showDivider;
+
+  //in implementation
+  bool showMonth = true;
+
   List<DateTime> week;
   DateTime selected;
   DateTime showing;
 
-  _CalendarState(DateTime firstSelected) {
-    this.week = generateWeek(firstSelected);
+  _CalendarState({
+    this.nameDaysOfWeek,
+    this.nameMonthsOfYear,
+    this.firstSelected,
+    this.maximumDate,
+    this.minimumDate,
+    this.events,
+    this.disabledDays,
+    this.onSelectedDay,
+    this.disabledDayColor,
+    this.selectedDayColor,
+    this.normalDayColor,
+    this.outOfRangeDayColor,
+    this.showBorder = true,
+    this.showDivider = true,
+    /*this.showMonth = true*/
+  }) {
     this.selected = firstSelected;
-    this.showing = firstSelected;
+
+    DateTime focus = firstSelected ?? minimumDate ?? maximumDate ?? _zeroHour(DateTime.now());
+
+    this.week = generateWeek(focus);
+    this.showing = focus;
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: widget.showBorder ? BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(width: 1, color: Colors.black)) : null,
+      decoration: showBorder
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(width: 1, color: Colors.black))
+          : null,
       child: Center(
         child: Column(
           children: <Widget>[
-            widget.showMonth? Row(
-              children: <Widget>[
-                _greaterThanMinimum(week.first)
-                    ? FlatButton(
-                        child: Text("<"),
-                        onPressed: () {
-                          showing = showing.add(Duration(days: -7));
-                          setState(() {
-                            week = generateWeek(showing);
-                          });
-                        },
-                      )
-                    : FlatButton(
-                        onPressed: null,
-                        child: Container(),
-                      ),
-                Expanded(
-                    child: Center(
-                        child: Text(widget.nameMonthsOfYear[week.last.month] +
+            showMonth
+                ? Row(
+                    children: <Widget>[
+                      _greaterThanMinimum(week.first)
+                          ? FlatButton(
+                              child: Text("<"),
+                              onPressed: () {
+                                showing = showing.add(Duration(days: -7));
+                                setState(() {
+                                  week = generateWeek(showing);
+                                });
+                              },
+                            )
+                          : FlatButton(
+                              onPressed: null,
+                              child: Container(),
+                            ),
+                      Expanded(
+                          child: Center(
+                              child: Text(
+                        nameMonthsOfYear[week.last.month] +
                             " " +
-                            week.last.year.toString(), style: TextStyle(fontSize: 18),))),
-                _lesserThanMaximum(week.last)
-                    ? FlatButton(
-                        child: Text(">"),
-                        onPressed: () {
-                          showing = showing.add(Duration(days: 7));
-                          setState(() {
-                            week = generateWeek(showing);
-                          });
-                        },
-                      )
-                    : FlatButton(
-                        onPressed: null,
-                        child: Container(),
-                      ),
-              ],
-            ) : Container(),
-            !widget.showMonth || !widget.showDivider ? Container() : Divider(thickness: 1, color: Colors.black, height: 3,),
+                            week.last.year.toString(),
+                        style: TextStyle(fontSize: 18),
+                      ))),
+                      _lesserThanMaximum(week.last)
+                          ? FlatButton(
+                              child: Text(">"),
+                              onPressed: () {
+                                showing = showing.add(Duration(days: 7));
+                                setState(() {
+                                  week = generateWeek(showing);
+                                });
+                              },
+                            )
+                          : FlatButton(
+                              onPressed: null,
+                              child: Container(),
+                            ),
+                    ],
+                  )
+                : Container(),
+            !showMonth || !showDivider
+                ? Container()
+                : Divider(
+                    thickness: 1,
+                    color: Colors.black,
+                    height: 3,
+                  ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: week.map((day) {
@@ -260,27 +322,30 @@ class _CalendarState extends State<Calendar> {
                       setState(() {
                         this.selected = day;
                       });
-                      widget.onSelectedDay(day);
+                      onSelectedDay(day);
                     }
                   },
                   child: Stack(
                     alignment: Alignment.topRight,
                     children: <Widget>[
                       Text(
-                        (widget.events[_zeroHour(day).millisecondsSinceEpoch] ??
-                                "")
+                        (events[_zeroHour(day).millisecondsSinceEpoch] ?? "")
                             .toString(),
-                        style: TextStyle(color: _getDayColor(day), fontSize: 10),
+                        style:
+                            TextStyle(color: _getDayColor(day), fontSize: 10),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(5),
                         child: Column(
                           children: <Widget>[
                             Text(
-                              widget.nameDaysOfWeek[day.weekday].substring(0, 3),
+                              nameDaysOfWeek[day.weekday].substring(0, 3),
                               style: TextStyle(
-                                  fontSize: 15, color: _getDayColor(day),
-                              decoration: _isSameDay(day, DateTime.now()) ? TextDecoration.underline : null),
+                                  fontSize: 15,
+                                  color: _getDayColor(day),
+                                  decoration: _isSameDay(day, DateTime.now())
+                                      ? TextDecoration.underline
+                                      : null),
                             ),
                             Text(
                               day.day.toString(),
@@ -311,24 +376,24 @@ class _CalendarState extends State<Calendar> {
   Color _getDayColor(DateTime day) {
     /*if (_isSameDay(day, DateTime.now())) {
       return Colors.green;
-    } else */if ((widget.minimumDate != null &&
-            day.isBefore(widget.minimumDate)) ||
-        (widget.maximumDate != null && day.isAfter(widget.maximumDate))) {
-      return widget.outOfRangeDayColor;
-    } else if (widget.disabledDays.contains(day.weekday)) {
-      return widget.disabledDayColor;
-    } else if (_isSameDay(selected, day)) {
-      return widget.selectedDayColor;
+    } else */
+    if ((minimumDate != null && day.isBefore(minimumDate)) ||
+        (maximumDate != null && day.isAfter(maximumDate))) {
+      return outOfRangeDayColor;
+    } else if (disabledDays.contains(day.weekday)) {
+      return disabledDayColor;
+    } else if (selected != null && _isSameDay(selected, day)) {
+      return selectedDayColor;
     } else {
-      return widget.normalDayColor;
+      return normalDayColor;
     }
   }
 
   bool _greaterThanMinimum(DateTime date) {
-    if (widget.minimumDate == null) {
+    if (minimumDate == null) {
       return true;
     } else {
-      if (date.isAfter(widget.minimumDate)) {
+      if (date.isAfter(minimumDate)) {
         return true;
       } else {
         return false;
@@ -337,10 +402,10 @@ class _CalendarState extends State<Calendar> {
   }
 
   bool _lesserThanMaximum(DateTime date) {
-    if (widget.maximumDate == null) {
+    if (maximumDate == null) {
       return true;
     } else {
-      if (date.isBefore(widget.maximumDate)) {
+      if (date.isBefore(maximumDate)) {
         return true;
       } else {
         return false;
@@ -349,9 +414,9 @@ class _CalendarState extends State<Calendar> {
   }
 
   bool _isOkDay(DateTime day) {
-    return !((widget.minimumDate != null && day.isBefore(widget.minimumDate)) ||
-        (widget.maximumDate != null && day.isAfter(widget.maximumDate)) ||
-        widget.disabledDays.contains(day.weekday));
+    return !((minimumDate != null && day.isBefore(minimumDate)) ||
+        (maximumDate != null && day.isAfter(maximumDate)) ||
+        disabledDays.contains(day.weekday));
   }
 }
 
