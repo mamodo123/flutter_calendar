@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 class Calendar extends StatefulWidget {
   static const DAYS_OF_WEEK = {
